@@ -22,10 +22,12 @@ function doPost(e) {
     data = parseCommandText(commandText);
     eventId = createCalendar(data);
     postSlack(
-      `<@${userId}> がイベントを作成しました:sparkles:\n${data.title} に行ってみよう!\n${data.opts.description}\nID:${eventId}`
+      `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.opts.description}`,
+      true,
+      eventId
     );
   } catch (e) {
-    postSlack(`エラーが発生しました :scream:\n${e.message}`);
+    postSlack(`エラーが発生しました :scream:\n${e.message}`, false);
   }
 }
 
@@ -74,11 +76,23 @@ function createCalendar({
   return event.getId();
 }
 
-function postSlack(text) {
+function postSlack(text, isSuccess, eventId = "") {
+  const attachments = [
+    {
+      color: isSuccess ? "good" : "danger",
+      text,
+      footer: isSuccess ? `ID: ${eventId}` : ""
+    }
+  ];
+  const message = {
+    username: "展示郎",
+    attachments,
+    markdown_in: ["text"]
+  };
   const opts = {
     method: "POST",
     headers: { "Content-type": "application/json" },
-    payload: '{"text":"' + text + '"}'
+    payload: JSON.stringify(message)
   };
   UrlFetchApp.fetch(WEBHOOK_URL, opts);
 }
