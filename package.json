@@ -1,0 +1,19 @@
+{
+  "name": "calendar-register",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Code.js",
+  "dependencies": {
+    "@types/google-apps-script": "^1.0.0"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.3.0",
+    "tslint": "^5.20.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
