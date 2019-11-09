@@ -7,28 +7,30 @@ const WEBHOOK_URL = properties.getProperty("WEBHOOK_URL");
 
 type Opts = { description?: string; location?: string };
 type Calender = { title: string; dateAry: Date[]; opts: Opts };
-type Message = { text: string };
 
 function doPost(e) {
   const commandText: string = e.parameter.text;
   const token: string = e.parameter.token;
+  const userName: string = e.parameter.user_name;
 
   if (token !== VERIFICATION_TOKEN) {
     throw new Error("Invalid token");
   }
 
-  let data: Calender, msg: Message, eventId: string;
+  let data: Calender, eventId: string;
   try {
     data = parseCommandText(commandText);
     eventId = createCalendar(data);
-    msg = { text: `${data.title} のイベントが作成されました \nID: ${eventId}` };
-    postSlack(`${data.title} に行ってみよう!\n${data.opts.description}`);
+    postSlack(`
+      ${userName} がイベントを作成しました ID: ${eventId}
+      ${data.title} に行ってみよう!
+      ${data.opts.description}
+    `);
   } catch (e) {
-    msg = { text: e.message };
-  } finally {
-    const text = JSON.stringify(msg);
-    const mimeType = ContentService.MimeType.JSON;
-    return ContentService.createTextOutput(text).setMimeType(mimeType);
+    postSlack(`
+      エラーが発生しました :scream:
+      ${e.message}
+    `);
   }
 }
 
