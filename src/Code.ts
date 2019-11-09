@@ -5,7 +5,7 @@ const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
 const WEBHOOK_URL = properties.getProperty("WEBHOOK_URL");
 
-type Opts = { description?: string; location?: string };
+type Opts = { description: string; location: string };
 type Calender = { title: string; dateAry: Date[]; opts: Opts };
 
 function doPost(e) {
@@ -51,7 +51,7 @@ function parseCommandText(text) {
     throw new Error(`Invalid Dates length. ${text}`);
   }
 
-  const opts: Opts = {};
+  const opts: Opts = { description: "", location: "" };
   optAry.forEach(opt => {
     if (opt.indexOf("http") > -1) {
       opts.description = opt;
@@ -66,7 +66,7 @@ function parseCommandText(text) {
 function createCalendar({
   title = "title",
   dateAry = [new Date()],
-  opts = {}
+  opts = { description: "", location: "" }
 }: Calender) {
   const event =
     dateAry.length === 1
