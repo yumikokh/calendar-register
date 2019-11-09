@@ -4,8 +4,7 @@
   "description": "",
   "main": "Code.js",
   "dependencies": {
-    "@types/google-apps-script": "^1.0.0",
-    "lodash": "^4.17.15"
+    "@types/google-apps-script": "^1.0.0"
   },
   "devDependencies": {
     "@google/clasp": "^2.3.0",
