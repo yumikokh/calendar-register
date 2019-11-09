@@ -1,7 +1,8 @@
-// const calenderId = "06cjfu4fl3atlsknlkj7ur392g@group.calendar.google.com"; // club-exhibition
-const calendarId =
-  "kayac.com_rr2pclfu106d2pg20gq1dnh1ic@group.calendar.google.com"; // test用
-const calendar = CalendarApp.getCalendarById(calendarId);
+const properties = PropertiesService.getScriptProperties();
+
+const CALENDAR_ID = properties.getProperty("CALENDAR_ID");
+const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
 
 type Opts = { description?: string; location?: string };
 type Calender = { title: string; dateAry: Date[]; opts: Opts };
@@ -11,7 +12,9 @@ function doPost(e) {
   const commandText: string = e.parameter.text;
   const token: string = e.parameter.token;
 
-  // TODO: tokenでフィルターかける
+  if (token !== VERIFICATION_TOKEN) {
+    throw new Error("Invalid token");
+  }
 
   let data: Calender, msg: Message, eventId: string;
   try {
