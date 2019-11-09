@@ -33,7 +33,8 @@ function doPost(e) {
 }
 
 function parseCommandText(text) {
-  const t = text.split("_");
+  const trimedText = text.split(/^<[@A-Z0-9]*> /g)[1];
+  const t = trimedText.split("_");
 
   if (t.length < 2 || t.length > 5) {
     throw new Error(`Invalid argument error. ${text}`);
@@ -78,7 +79,7 @@ function postSlack(text) {
   const opts = {
     method: "POST",
     headers: { "Content-type": "application/json" },
-    payload: `{ text: ${text} }`
+    payload: '{"text":"' + text + '"}'
   };
   UrlFetchApp.fetch(WEBHOOK_URL, opts);
 }
