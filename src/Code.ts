@@ -21,14 +21,12 @@ function doPost(e) {
   try {
     data = parseCommandText(commandText);
     eventId = createCalendar(data);
-    msg = `<@${userId}> がイベントを作成しました:sparkles:\n${data.title} に行ってみよう!\n${data.opts.description}\nID:${eventId}`);
+    postSlack(
+      `<@${userId}> がイベントを作成しました:sparkles:\n${data.title} に行ってみよう!\n${data.opts.description}\nID:${eventId}`
+    );
   } catch (e) {
-    msg = `エラーが発生しました :scream:\n${e.message}`;
+    postSlack(`エラーが発生しました :scream:\n${e.message}`);
   }
-
-  const text = JSON.stringify({ text: msg });
-  const mimeType = ContentService.MimeType.JSON;
-  return ContentService.createTextOutput(text).setMimeType(mimeType);
 }
 
 function parseCommandText(text) {
@@ -36,7 +34,9 @@ function parseCommandText(text) {
   const t = trimedText.split("_");
 
   if (t.length < 2 || t.length > 5) {
-    throw new Error("@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com\nのように入力するんやで");
+    throw new Error(
+      "@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com\nのように入力するんやで"
+    );
   }
   const [title, dates, ...optAry] = t;
 
