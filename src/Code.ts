@@ -3,6 +3,7 @@ const properties = PropertiesService.getScriptProperties();
 const CALENDAR_ID = properties.getProperty("CALENDAR_ID");
 const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
+const WEBHOOK_URL = properties.getProperty("WEBHOOK_URL");
 
 type Opts = { description?: string; location?: string };
 type Calender = { title: string; dateAry: Date[]; opts: Opts };
@@ -20,7 +21,8 @@ function doPost(e) {
   try {
     data = parseCommandText(commandText);
     eventId = createCalendar(data);
-    msg = { text: `${data.title} に行ってみよう!\nID: ${eventId}` };
+    msg = { text: `${data.title} のイベントが作成されました \nID: ${eventId}` };
+    postSlack(`${data.title} に行ってみよう!\n${data.opts.description}`);
   } catch (e) {
     msg = { text: e.message };
   } finally {
@@ -70,4 +72,13 @@ function createCalendar({
       ? calendar.createAllDayEvent(title, dateAry[0], dateAry[1], opts)
       : calendar.createEvent(title, dateAry[0], dateAry[1], opts);
   return event.getId();
+}
+
+function postSlack(text) {
+  const opts = {
+    method: "POST",
+    headers: { "Content-type": "application/json" },
+    payload: `{ text: ${text} }`
+  };
+  UrlFetchApp.fetch(WEBHOOK_URL, opts);
 }
