@@ -36,16 +36,16 @@ function parseCommandText(text) {
   const t = trimedText.split("_");
 
   if (t.length < 2 || t.length > 5) {
-    throw new Error(`Invalid argument error. ${text}`);
+    throw new Error("@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com\nのように入力するんやで");
   }
   const [title, dates, ...optAry] = t;
 
   const dateAry = dates.split("-").map(date => new Date(date));
 
   if (dateAry.some(date => isNaN(date.getTime()))) {
-    throw new Error(`Invalid Date included. ${text}`);
+    throw new Error("日付の形式が正しくないんやで");
   } else if (dateAry.length > 2) {
-    throw new Error(`Invalid Dates length. ${text}`);
+    throw new Error("3つ以上の日付は指定できないんやで");
   }
 
   const opts: Opts = { description: "", location: "" };
