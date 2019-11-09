@@ -11,27 +11,24 @@ type Calender = { title: string; dateAry: Date[]; opts: Opts };
 function doPost(e) {
   const commandText: string = e.parameter.text;
   const token: string = e.parameter.token;
-  const userName: string = e.parameter.user_name;
+  const userId: string = e.parameter.user_id;
 
   if (token !== VERIFICATION_TOKEN) {
     throw new Error("Invalid token");
   }
 
-  let data: Calender, eventId: string;
+  let data: Calender, msg: string, eventId: string;
   try {
     data = parseCommandText(commandText);
     eventId = createCalendar(data);
-    postSlack(`
-      ${userName} がイベントを作成しました ID: ${eventId}
-      ${data.title} に行ってみよう!
-      ${data.opts.description}
-    `);
+    msg = `<@${userId}> がイベントを作成しました:sparkles:\n${data.title} に行ってみよう!\n${data.opts.description}\nID:${eventId}`);
   } catch (e) {
-    postSlack(`
-      エラーが発生しました :scream:
-      ${e.message}
-    `);
+    msg = `エラーが発生しました :scream:\n${e.message}`;
   }
+
+  const text = JSON.stringify({ text: msg });
+  const mimeType = ContentService.MimeType.JSON;
+  return ContentService.createTextOutput(text).setMimeType(mimeType);
 }
 
 function parseCommandText(text) {
