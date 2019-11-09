@@ -37,7 +37,7 @@ function parseCommandText(text) {
 
   const dateAry = dates.split("-").map(date => new Date(date));
 
-  if (dateAry.some(date => !date.getDay())) {
+  if (dateAry.some(date => isNaN(date.getTime()))) {
     throw new Error(`Invalid Date included. ${text}`);
   } else if (dateAry.length > 2) {
     throw new Error(`Invalid Dates length. ${text}`);
@@ -60,9 +60,11 @@ function createCalendar({
   dateAry = [new Date()],
   opts = {}
 }: Calender) {
-  if (dateAry.length === 2) {
-    return calendar.createEvent(title, dateAry[0], dateAry[1], opts).getId();
-  } else {
-    return calendar.createAllDayEvent(title, dateAry[0], opts).getId();
-  }
+  const event =
+    dateAry.length === 1
+      ? calendar.createAllDayEvent(title, dateAry[0], opts)
+      : dateAry[0].getHours() === 0
+      ? calendar.createAllDayEvent(title, dateAry[0], dateAry[1], opts)
+      : calendar.createEvent(title, dateAry[0], dateAry[1], opts);
+  return event.getId();
 }
