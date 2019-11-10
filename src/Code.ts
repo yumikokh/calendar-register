@@ -47,7 +47,8 @@ function doPost(e) {
 
   try {
     const data: Calendar = parseCommandText(commandText);
-    const eventId: string = createCalendar(data, userId);
+    const userName: string = getUserName(userId, parameter.token);
+    const eventId: string = createCalendar(data, userName);
     postSlack(
       `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.url}`,
       true,
@@ -84,6 +85,20 @@ function parseCommandText(text): Calendar {
   return { url, dateAry, title, location };
 }
 
+function getUserName(userId, token): string {
+  const message = {
+    token,
+    user: userId
+  };
+  const opts = {
+    method: "POST",
+    headers: { "Content-type": "application/x-www-form-urlencoded" },
+    payload: JSON.stringify(message)
+  };
+  const res = UrlFetchApp.fetch("https://slack.com/api/users.info", opts);
+  return res.user.name;
+}
+
 function fetchTitle(url): string {
   const res = UrlFetchApp.fetch(url);
   const titleRegexp = /<title>([\s\S]*?)<\/title>/i;
@@ -98,11 +113,11 @@ function createCalendar(
     title = "title",
     location = "location"
   }: Calendar,
-  userId
+  userName
 ): string {
   const opts = {
     location,
-    description: `Created by @${userId}.\n${url}`
+    description: `Created by @${userName}.\n${url}`
   };
   const event =
     dateAry.length === 1
