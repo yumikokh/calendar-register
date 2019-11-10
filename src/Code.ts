@@ -14,7 +14,7 @@ type Calendar = {
 };
 
 function doPost(e) {
-  const parameter = JSON.parse(e.parameter.getDataAsString());
+  const parameter = JSON.parse(e.postData.getDataAsString());
 
   // Event API verification
   if (parameter.type === "url_verification") {
@@ -48,8 +48,8 @@ function doPost(e) {
   try {
     const data: Calendar = parseCommandText(commandText);
     const userName: string = getUserName(userId, parameter.token);
-    const createdAt: string = new  Date().toDateString();
-    const eve ntId: string = createCalendar(data, userName, createdAt);
+    const createdAt: string = new Date().toDateString();
+    const eventId: string = createCalendar(data, userName, createdAt);
     postSlack(
       `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.url}`,
       true,
