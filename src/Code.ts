@@ -6,8 +6,12 @@ const WEBHOOK_URL = properties.getProperty("WEBHOOK_URL");
 
 const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 
-type Opts = { description: string; location: string };
-type Calendar = { title: string; dateAry: Date[]; opts: Opts };
+type Calendar = {
+  url: string;
+  title: string;
+  dateAry: Date[];
+  location: string;
+};
 
 function doPost(e) {
   const commandText: string = e.parameter.text
@@ -24,24 +28,19 @@ function doPost(e) {
   if (/^delete /.test(commandText)) {
     try {
       const eventId = commandText.split(" ")[1].trim();
-      deleteEvent(eventId);
-      postSlack("イベントが削除されました", false, eventId);
+      const title = deleteEvent(eventId);
+      postSlack(`${title}が削除されました`, false, eventId);
     } catch (e) {
-      postSlack(
-        `エラーが発生しました :scream:\n${e.message}\n${
-          commandText.split(" ")[1]
-        }`,
-        false
-      );
+      postSlack(`エラーが発生しました :scream:\n${e.message}`, false);
     }
     return;
   }
 
   try {
     const data: Calendar = parseCommandText(commandText);
-    const eventId: string = createCalendar(data);
+    const eventId: string = createCalendar(data, userId);
     postSlack(
-      `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.opts.description}`,
+      `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.url}`,
       true,
       eventId
     );
@@ -50,12 +49,11 @@ function doPost(e) {
   }
 }
 
-function parseCommandText(text) {
+function parseCommandText(text): Calendar {
   const t = text.split("_");
 
   if (t.length < 2 || t.length > 5) {
     throw new Error(
-      // "`@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com`\nのように入力するんやで"
       "`@展示郎 https://example.com_2019/11/9-2019/11/12_展示名_展示場所`\nのように入力するんやで"
     );
   }
@@ -76,18 +74,26 @@ function parseCommandText(text) {
   return { url, dateAry, title, location };
 }
 
-function fetchTitle(url) {
+function fetchTitle(url): string {
   const res = UrlFetchApp.fetch(url);
   const titleRegexp = /<title>([\s\S]*?)<\/title>/i;
   var match = titleRegexp.exec(res.getContentText());
   return match[1];
 }
 
-function createCalendar({
-  title = "title",
-  dateAry = [new Date()],
-  opts = { description: "", location: "" }
-}: Calendar) {
+function createCalendar(
+  {
+    url = "https://",
+    dateAry = [new Date()],
+    title = "title",
+    location = "location"
+  }: Calendar,
+  userId
+): string {
+  const opts = {
+    location,
+    description: `Created by @${userId}.\n${url}`
+  };
   const event =
     dateAry.length === 1
       ? calendar.createAllDayEvent(title, dateAry[0], opts)
@@ -99,7 +105,9 @@ function createCalendar({
 
 function deleteEvent(eventId) {
   const event = calendar.getEventById(eventId);
+  const title = event.getTitle();
   event.deleteEvent();
+  return title;
 }
 
 function postSlack(text, isSuccess, eventId = "") {
