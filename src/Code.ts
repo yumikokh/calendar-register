@@ -63,10 +63,10 @@ function parseCommandText(text): Calendar {
 
   if (t.length < 2 || t.length > 5) {
     throw new Error(
-      "`@展示郎 https://example.com_2019/11/9-2019/11/12_展示名_展示場所`\nのように入力するんやで"
+      "`@展示郎 2019/11/9-2019/11/12_展示名_展示場所_https://example.com`\nのように入力するんやで"
     );
   }
-  let [url, dates, title, location] = t;
+  let [dates, title, location, url] = t;
 
   if (/^http/g.test(url)) throw new Error("URLが正しくないで");
 
@@ -78,7 +78,8 @@ function parseCommandText(text): Calendar {
     return d;
   });
 
-  title = title || fetchTitle(url);
+  title = Number(title) === 0 ? fetchTitle(url) : title;
+  location = Number(location) === 0 ? "" : location;
 
   return { url, dateAry, title, location };
 }
