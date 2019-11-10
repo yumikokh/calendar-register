@@ -1,15 +1,19 @@
 const properties = PropertiesService.getScriptProperties();
 
 const CALENDAR_ID = properties.getProperty("CALENDAR_ID");
-const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
 const WEBHOOK_URL = properties.getProperty("WEBHOOK_URL");
 
+const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+
 type Opts = { description: string; location: string };
-type Calender = { title: string; dateAry: Date[]; opts: Opts };
+type Calendar = { title: string; dateAry: Date[]; opts: Opts };
 
 function doPost(e) {
-  const commandText: string = e.parameter.text;
+  const commandText: string = e.parameter.text
+    .replace(/^<(@.*?)> /, "")
+    .replace(/<(http.*?)>/, "$1")
+    .replace(/<(.*?@google.com)>/, "$1");
   const token: string = e.parameter.token;
   const userId: string = e.parameter.user_id;
 
@@ -17,10 +21,25 @@ function doPost(e) {
     throw new Error("Invalid token");
   }
 
-  let data: Calender, msg: string, eventId: string;
+  if (/^delete /.test(commandText)) {
+    try {
+      const eventId = commandText.split(" ")[1].trim();
+      deleteEvent(eventId);
+      postSlack("イベントが削除されました", false, eventId);
+    } catch (e) {
+      postSlack(
+        `エラーが発生しました :scream:\n${e.message}\n${
+          commandText.split(" ")[1]
+        }`,
+        false
+      );
+    }
+    return;
+  }
+
   try {
-    data = parseCommandText(commandText);
-    eventId = createCalendar(data);
+    const data: Calendar = parseCommandText(commandText);
+    const eventId: string = createCalendar(data);
     postSlack(
       `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.opts.description}`,
       true,
@@ -32,12 +51,11 @@ function doPost(e) {
 }
 
 function parseCommandText(text) {
-  const trimedText = text.split(/^<[@A-Z0-9]*> /g)[1];
-  const t = trimedText.split("_");
+  const t = text.split("_");
 
   if (t.length < 2 || t.length > 5) {
     throw new Error(
-      "@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com\nのように入力するんやで"
+      "`@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com`\nのように入力するんやで"
     );
   }
   const [title, dates, ...optAry] = t;
@@ -66,7 +84,7 @@ function createCalendar({
   title = "title",
   dateAry = [new Date()],
   opts = { description: "", location: "" }
-}: Calender) {
+}: Calendar) {
   const event =
     dateAry.length === 1
       ? calendar.createAllDayEvent(title, dateAry[0], opts)
@@ -76,18 +94,23 @@ function createCalendar({
   return event.getId();
 }
 
+function deleteEvent(eventId) {
+  const event = calendar.getEventById(eventId);
+  event.deleteEvent();
+}
+
 function postSlack(text, isSuccess, eventId = "") {
   const attachments = [
     {
       color: isSuccess ? "good" : "danger",
       text,
-      footer: isSuccess ? `ID: ${eventId}` : ""
+      footer: eventId ? `ID: ${eventId}` : ""
     }
   ];
   const message = {
     username: "展示郎",
     attachments,
-    markdown_in: ["text"]
+    mrkdwn: true
   };
   const opts = {
     method: "POST",
