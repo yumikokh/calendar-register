@@ -2,6 +2,7 @@ const properties = PropertiesService.getScriptProperties();
 
 const CALENDAR_ID = properties.getProperty("CALENDAR_ID");
 const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
+const OAUTH_ACCESS_TOKEN = properties.getProperty("OAUTH_ACCESS_TOKEN");
 const WEBHOOK_URL = properties.getProperty("WEBHOOK_URL");
 
 const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -70,7 +71,7 @@ function parseCommandText(text): Calendar {
   }
   let [dates, title, location, url] = t;
 
-  if (/^http/g.test(url)) throw new Error("URLが正しくないで");
+  if (!/^http/g.test(url)) throw new Error("URLが正しくないで");
 
   const dateAry = dates.split("-").map((date, i) => {
     if (i > 2) throw new Error("3つ以上の日付は指定できないんやで");
@@ -87,17 +88,10 @@ function parseCommandText(text): Calendar {
 }
 
 function getUserName(userId, token): string {
-  const message = {
-    token,
-    user: userId
-  };
-  const opts = {
-    method: "POST",
-    headers: { "Content-type": "application/x-www-form-urlencoded" },
-    payload: JSON.stringify(message)
-  };
-  const res = UrlFetchApp.fetch("https://slack.com/api/users.info", opts);
-  return res.user.name;
+  const res: any = UrlFetchApp.fetch(
+    `https://slack.com/api/users.info?token=${OAUTH_ACCESS_TOKEN}&user=${userId}`
+  );
+  return res.user.profile.real_name;
 }
 
 function fetchTitle(url): string {
@@ -150,7 +144,7 @@ function postSlack(text, isSuccess, eventId = "") {
     attachments,
     mrkdwn: true
   };
-  const opts = {
+  const opts: any = {
     method: "POST",
     headers: { "Content-type": "application/json" },
     payload: JSON.stringify(message)
