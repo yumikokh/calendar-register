@@ -55,10 +55,13 @@ function parseCommandText(text) {
 
   if (t.length < 2 || t.length > 5) {
     throw new Error(
-      "`@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com`\nのように入力するんやで"
+      // "`@展示郎 展示名_2019/11/9-2019/11/12_新国立美術館_https://example.com`\nのように入力するんやで"
+      "`@展示郎 https://example.com_2019/11/9-2019/11/12_展示名_展示場所`\nのように入力するんやで"
     );
   }
-  const [title, dates, ...optAry] = t;
+  let [url, dates, title, location] = t;
+
+  if (/^http/g.test(url)) throw new Error("URLが正しくないで");
 
   const dateAry = dates.split("-").map((date, i) => {
     if (i > 2) throw new Error("3つ以上の日付は指定できないんやで");
@@ -68,16 +71,16 @@ function parseCommandText(text) {
     return d;
   });
 
-  const opts: Opts = { description: "", location: "" };
-  optAry.forEach(opt => {
-    if (opt.indexOf("http") > -1) {
-      opts.description = opt;
-    } else {
-      opts.location = opt;
-    }
-  });
+  title = title || fetchTitle(url);
 
-  return { title, dateAry, opts };
+  return { url, dateAry, title, location };
+}
+
+function fetchTitle(url) {
+  const res = UrlFetchApp.fetch(url);
+  const titleRegexp = /<title>([\s\S]*?)<\/title>/i;
+  var match = titleRegexp.exec(res.getContentText());
+  return match[1];
 }
 
 function createCalendar({
