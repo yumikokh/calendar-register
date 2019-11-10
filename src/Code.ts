@@ -60,13 +60,13 @@ function parseCommandText(text) {
   }
   const [title, dates, ...optAry] = t;
 
-  const dateAry = dates.split("-").map(date => new Date(date));
-
-  if (dateAry.some(date => isNaN(date.getTime()))) {
-    throw new Error("日付の形式が正しくないんやで");
-  } else if (dateAry.length > 2) {
-    throw new Error("3つ以上の日付は指定できないんやで");
-  }
+  const dateAry = dates.split("-").map((date, i) => {
+    if (i > 2) throw new Error("3つ以上の日付は指定できないんやで");
+    const d = new Date(date);
+    if (isNaN(d.getTime())) new Error("日付の形式が正しくないんやで");
+    if (d.getFullYear() === 2001) d.setFullYear(new Date().getFullYear());
+    return d;
+  });
 
   const opts: Opts = { description: "", location: "" };
   optAry.forEach(opt => {
