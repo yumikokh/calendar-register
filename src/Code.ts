@@ -13,7 +13,7 @@ function doPost(e) {
   const commandText: string = e.parameter.text
     .replace(/^<(@.*?)> /, "")
     .replace(/<(http.*?)>/, "$1")
-    .replace(/<(.*?@google.com)>/, "$1");
+    .replace(/<mailto:.*?@google.com\|(.*?@google.com)>/g, "$1");
   const token: string = e.parameter.token;
   const userId: string = e.parameter.user_id;
 
