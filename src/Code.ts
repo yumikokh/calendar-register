@@ -14,16 +14,25 @@ type Calendar = {
 };
 
 function doPost(e) {
-  const commandText: string = e.parameter.text
+  const parameter = JSON.parse(e.parameter.getDataAsString());
+
+  // Event API verification
+  if (parameter.type === "url_verification") {
+    return ContentService.createTextOutput(
+      JSON.stringify(parameter)
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (
+    parameter.type !== "event_callback" ||
+    parameter.token !== VERIFICATION_TOKEN
+  )
+    throw new Error("403 forbidden.");
+
+  const commandText: string = parameter.event.text
     .replace(/^<(@.*?)> /, "")
     .replace(/<(http.*?)>/, "$1")
     .replace(/<mailto:.*?@google.com\|(.*?@google.com)>/g, "$1");
-  const token: string = e.parameter.token;
-  const userId: string = e.parameter.user_id;
-
-  if (token !== VERIFICATION_TOKEN) {
-    throw new Error("Invalid token");
-  }
+  const userId: string = parameter.event.user;
 
   if (/^delete /.test(commandText)) {
     try {
