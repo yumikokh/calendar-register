@@ -75,9 +75,10 @@ function parseCommandText(text): Calendar {
 
   const dateAry = dates.split("-").map((date, i) => {
     if (i > 2) throw new Error("3つ以上の日付は指定できないんやで");
-    const d = new Date(date);
+    let d = new Date(date);
     if (isNaN(d.getTime())) new Error("日付の形式が正しくないんやで");
-    if (d.getFullYear() === 2001) d.setFullYear(new Date().getFullYear());
+    if (date.split("/").length === 2)
+      d = new Date(`${new Date().getFullYear()}/${date}`);
     return d;
   });
 
