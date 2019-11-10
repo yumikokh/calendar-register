@@ -48,7 +48,7 @@ function doPost(e) {
 
   try {
     const data: Calendar = parseCommandText(commandText);
-    const userName: string = getUserName(userId, parameter.token);
+    const userName: string = getUserName(userId);
     const createdAt: string = new Date().toDateString();
     const eventId: string = createCalendar(data, userName, createdAt);
     postSlack(
@@ -87,11 +87,11 @@ function parseCommandText(text): Calendar {
   return { url, dateAry, title, location };
 }
 
-function getUserName(userId, token): string {
+function getUserName(userId): string {
   const res: any = UrlFetchApp.fetch(
     `https://slack.com/api/users.info?token=${OAUTH_ACCESS_TOKEN}&user=${userId}`
   );
-  return res.user.profile.real_name;
+  return JSON.parse(res).user.profile.real_name;
 }
 
 function fetchTitle(url): string {
@@ -136,7 +136,9 @@ function postSlack(text, isSuccess, eventId = "") {
     {
       color: isSuccess ? "good" : "danger",
       text,
-      footer: eventId ? `ID: ${eventId}` : ""
+      footer: eventId
+        ? `ID: <https://calendar.google.com/calendar/embed?src=${CALENDAR_ID}&ctz=Asia%2FTokyo|${eventId}>`
+        : ""
     }
   ];
   const message = {
