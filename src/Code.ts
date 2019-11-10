@@ -48,7 +48,8 @@ function doPost(e) {
   try {
     const data: Calendar = parseCommandText(commandText);
     const userName: string = getUserName(userId, parameter.token);
-    const eventId: string = createCalendar(data, userName);
+    const createdAt: string = new  Date().toDateString();
+    const eve ntId: string = createCalendar(data, userName, createdAt);
     postSlack(
       `<@${userId}> がイベントを作成しました:sparkles:\n*${data.title}* に行ってみよう!\n${data.url}`,
       true,
@@ -113,11 +114,12 @@ function createCalendar(
     title = "title",
     location = "location"
   }: Calendar,
-  userName
+  userName,
+  createdAt
 ): string {
   const opts = {
     location,
-    description: `Created by @${userName}.\n${url}`
+    description: `Created by @${userName}. ${createdAt}\n${url}`
   };
   const event =
     dateAry.length === 1
